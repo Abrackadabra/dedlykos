@@ -244,11 +244,10 @@ def check(conn, db):
   if not hasattr(conn, 'registry'):
     conn.registry = Registry()
 
-  print('checking')
+  print('?', end='', flush=True)
   r = conn.registry
 
   if not r.mode(WEREWOLF_CHAN) or not r.mode(MIRROR_CHAN):
-    print('not joined')
     return
 
   w = r.chan(WEREWOLF_CHAN)
@@ -257,10 +256,9 @@ def check(conn, db):
   wm = r.mode(WEREWOLF_CHAN)
   mm = r.mode(MIRROR_CHAN)
 
-  print(w, m, wm, mm)
+  # print(w, m, wm, mm)
 
   for j in set(m):
-    print('  {}'.format(j))
     if not j.account:
       conn.send('KICK {} {} :{}'.format(MIRROR_CHAN, j.nick, 'Unidentified.'))
       return
@@ -308,7 +306,7 @@ def check(conn, db):
           kicked.remove(db, i)
           return
 
-  print('Success!')
+  print('+', end='', flush=True)
 
 @asyncio.coroutine
 @hook.command(permissions=['botcontrol'])
