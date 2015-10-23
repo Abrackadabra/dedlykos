@@ -10,14 +10,19 @@ class PersistentSet(object):
       self._set.add(nick)
 
   def add(self, db, x):
+    if x in self._set:
+      print('{} is already in {}'.format(x, self._set))
+      return
+
     self._set.add(x)
     db.execute(self._table.insert().values(nick=x, set=self._set_name))
     db.commit()
 
   def update(self, db, x):
     for i in x:
-      self._set.add(i)
-      db.execute(self._table.insert().values(nick=i, set=self._set_name))
+      if i not in self._set:
+        self._set.add(i)
+        db.execute(self._table.insert().values(nick=i, set=self._set_name))
     db.commit()
 
   def remove(self, db, x):
@@ -27,7 +32,7 @@ class PersistentSet(object):
 
     self._set.remove(x)
     db.execute(self._table.delete().where(self._table.c.nick == x)
-                     .where(self._table.c.set == self._set_name))
+               .where(self._table.c.set == self._set_name))
     db.commit()
 
   def clear(self, db):
