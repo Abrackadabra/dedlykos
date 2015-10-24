@@ -74,9 +74,9 @@ def check(conn, db):
       conn.send('KICK {} {} :{}'.format(MIRROR_CHAN, j.nick, 'Not in ##werewolf'))
       return
 
-  for i in w:
-    for j in m:
-      if i.account == j.account:
+  for i in m:
+    for j in w:
+      if i.nick == j.nick:
         if i.prefix == '+' and not j.prefix:
           conn.send('MODE {} +v {}'.format(MIRROR_CHAN, j.nick))
           return
@@ -92,27 +92,30 @@ def check(conn, db):
       for j in m:
         if i.prefix == '+' and i.account == j.account:
           conn.send('KICK {} {} :{}'.format(MIRROR_CHAN, j.nick, 'Playing ##werewolf'))
-          kicked.add(db, i.account)
+          kicked.add(db, '{} {}'.format(i.nick, i.account))
           return
         elif not i.prefix and i.account == j.account and i.account not in privileged.set():
           conn.send('KICK {} {} :{}'.format(MIRROR_CHAN, j.nick, 'Not allowed to spectate'))
-          kicked.add(db, i.account)
+          kicked.add(db, '{} {}'.format(i.nick, i.account))
           return
 
     for i in w:
-      if i not in m and not i.prefix and i.account in kicked.set():
-        conn.send('INVITE {} {}'.format(i.nick, MIRROR_CHAN))
-        kicked.remove(db, i.account)
-        return
+      for j in kicked.set():
+        nick, account = j.split()
+        if i not in m and not i.prefix and i.nick == nick and i.account == account:
+          conn.send('INVITE {} {}'.format(i.nick, MIRROR_CHAN))
+          kicked.remove(db, j)
+          return
   else:
     if 'i' in mm:
       conn.send('MODE {} -i'.format(MIRROR_CHAN))
 
-    for i in set(kicked.set()):
-      for j in w:
-        if j.account == i and j not in m:
-          conn.send('INVITE {} {}'.format(j.nick, MIRROR_CHAN))
-          kicked.remove(db, i)
+    for i in w:
+      for j in kicked.set():
+        nick, account = j.split()
+        if i not in m and i.nick == nick and i.account == account:
+          conn.send('INVITE {} {}'.format(i.nick, MIRROR_CHAN))
+          kicked.remove(db, j)
           return
 
 
