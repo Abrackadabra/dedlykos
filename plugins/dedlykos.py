@@ -6,10 +6,10 @@ from cloudbot.util import database
 from cloudbot.util.persistent_set import PersistentSet
 from plugins.global_tracking import Registry
 
-# WEREWOLF_CHAN = '##werewolf'
-WEREWOLF_CHAN = '##abra2'
-# MIRROR_CHAN = '##werewolf-ded'
-MIRROR_CHAN = '##abra'
+WEREWOLF_CHAN = '##werewolf'
+# WEREWOLF_CHAN = '##abra2'
+MIRROR_CHAN = '##werewolf-ded'
+# MIRROR_CHAN = '##abra'
 
 table = Table(
   'dedlykos_table_a',
