@@ -31,15 +31,15 @@ class Dude(object):
     return hash(self.nick) + hash(self.account)
 
   def modify(self, nick=None, username=None, host=None, account=None, prefix=None):
-    if not nick:
+    if nick is None:
       nick = self.nick
-    if not username:
+    if username is None:
       username = self.username
-    if not host:
+    if host is None:
       host = self.host
-    if not account:
+    if account is None:
       account = self.account
-    if not prefix:
+    if prefix is None:
       prefix = self.prefix
     return Dude(nick, username, host, account, prefix)
 
@@ -83,6 +83,16 @@ class Registry(object):
       for j in i:
         if j.nick == nick:
           return j
+
+  def get_dude_chan(self, nick, chan):
+    """
+    :type nick: str
+    :type chan: str
+    :returns Dude
+    """
+    for i in self.chans[chan]:
+      if i.nick == nick:
+        return i
 
   def process_quit(self, conn, nick):
     dude = self.get_dude(nick)
@@ -136,7 +146,7 @@ class Registry(object):
 
     for i in a:
       if i[2]:
-        dude = self.get_dude(i[2])
+        dude = self.get_dude_chan(i[2], chan)
         p = dude.prefix
 
         if i[1] == '+v' and not p:
@@ -148,10 +158,8 @@ class Registry(object):
         elif i[1] == '-o':
           p = ''
         new_dude = dude.modify(prefix=p)
-        for j in self.chans.values():
-          if dude in j:
-            j.remove(dude)
-            j.add(new_dude)
+        self.chans[chan].remove(dude)
+        self.chans[chan].add(new_dude)
       else:
         chan = i[0]
         ch = i[1]

@@ -6,10 +6,10 @@ from cloudbot.util import database
 from cloudbot.util.persistent_set import PersistentSet
 from plugins.global_tracking import Registry
 
-WEREWOLF_CHAN = '##werewolf'
-# WEREWOLF_CHAN = '##abra2'
-MIRROR_CHAN = '##werewolf-ded'
-# MIRROR_CHAN = '##abra'
+# WEREWOLF_CHAN = '##werewolf'
+WEREWOLF_CHAN = '##abra2'
+# MIRROR_CHAN = '##werewolf-ded'
+MIRROR_CHAN = '##abra'
 
 table = Table(
   'dedlykos_table_a',
@@ -54,7 +54,6 @@ def check(conn, db):
   if not hasattr(conn, 'registry'):
     conn.registry = Registry()
 
-  print('?', end='', flush=True)
   r = conn.registry
 
   if not r.mode(WEREWOLF_CHAN) or not r.mode(MIRROR_CHAN):
@@ -68,11 +67,11 @@ def check(conn, db):
 
   for j in set(m):
     if not j.account:
-      conn.send('KICK {} {} :{}'.format(MIRROR_CHAN, j.nick, 'Unidentified.'))
+      conn.send('KICK {} {} :{}'.format(MIRROR_CHAN, j.nick, 'Unidentified'))
       return
 
     if j not in w:
-      conn.send('KICK {} {} :{}'.format(MIRROR_CHAN, j.nick, 'Not in ##werewolf.'))
+      conn.send('KICK {} {} :{}'.format(MIRROR_CHAN, j.nick, 'Not in ##werewolf'))
       return
 
   for i in w:
@@ -80,13 +79,9 @@ def check(conn, db):
       if i.account == j.account:
         if i.prefix == '+' and not j.prefix:
           conn.send('MODE {} +v {}'.format(MIRROR_CHAN, j.nick))
-          conn.message(MIRROR_CHAN, 'MODE {} +v {}'.format(MIRROR_CHAN, j.nick))
-          print('MODE {} +v {}'.format(MIRROR_CHAN, j.nick))
           return
         if not i.prefix and j.prefix == '+':
           conn.send('MODE {} -v {}'.format(MIRROR_CHAN, j.nick))
-          conn.message(MIRROR_CHAN, 'MODE {} -v {}'.format(MIRROR_CHAN, j.nick))
-          print('MODE {} -v {}'.format(MIRROR_CHAN, j.nick))
           return
 
   if 'm' in wm:
@@ -96,11 +91,11 @@ def check(conn, db):
     for i in w:
       for j in m:
         if i.prefix == '+' and i.account == j.account:
-          conn.send('KICK {} {} :{}'.format(MIRROR_CHAN, j.nick, 'Playing ##werewolf.'))
+          conn.send('KICK {} {} :{}'.format(MIRROR_CHAN, j.nick, 'Playing ##werewolf'))
           kicked.add(db, i.account)
           return
         elif not i.prefix and i.account == j.account and i.account not in privileged.set():
-          conn.send('KICK {} {} :{}'.format(MIRROR_CHAN, j.nick, 'Not allowed to spectate.'))
+          conn.send('KICK {} {} :{}'.format(MIRROR_CHAN, j.nick, 'Not allowed to spectate'))
           kicked.add(db, i.account)
           return
 
@@ -119,8 +114,6 @@ def check(conn, db):
           conn.send('INVITE {} {}'.format(j.nick, MIRROR_CHAN))
           kicked.remove(db, i)
           return
-
-  print('+', end='', flush=True)
 
 
 @asyncio.coroutine
