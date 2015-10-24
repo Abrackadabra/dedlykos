@@ -43,7 +43,7 @@ def on_join(conn, chan, event, nick, db):
 
 
 @asyncio.coroutine
-@hook.periodic(1)
+@hook.periodic(3)
 def periodic_checker(bot, db):
   for conn in bot.connections.values():
     yield from check(conn, db)
