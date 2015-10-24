@@ -30,18 +30,18 @@ class Dude(object):
   def __hash__(self):
     return hash(self.nick) + hash(self.account)
 
-  @staticmethod
-  def from_repr(s):
-    match = re.findall(r'([@+]+)([^!]*)!([^@]*)@([^ ]*) as (.*)', s)
-    if match:
-      prefix, nick, username, host, account = match[0]
-      dude = Dude(nick, username, host, account, prefix)
-      return dude
-
-  def prefix_in_chan(self, s):
-    for i in s:
-      if self == i:
-        return i.prefix
+  def modify(self, nick=None, username=None, host=None, account=None, prefix=None):
+    if not nick:
+      nick = self.nick
+    if not username:
+      username = self.username
+    if not host:
+      host = self.host
+    if not account:
+      account = self.account
+    if not prefix:
+      prefix = self.prefix
+    return Dude(nick, username, host, account, prefix)
 
 
 class Registry(object):
@@ -54,7 +54,6 @@ class Registry(object):
   def __init__(self):
     self.chans = {}
     self.modes = {}
-    self.change_callbacks = []
 
   def process_who(self, conn, chan, who):
     self.chans[chan] = set(who)
@@ -109,7 +108,7 @@ class Registry(object):
   def process_nick(self, conn, old, new):
     dude = self.get_dude(old)
     if dude:
-      new_dude = Dude(new, dude.username, dude.host, dude.account, dude.prefix)
+      new_dude = dude.modify(nick=new)
       for i in self.chans.values():
         if dude in i:
           i.remove(dude)
@@ -136,7 +135,24 @@ class Registry(object):
         a.append([chan, '{}{}'.format('+' if plus else '-', i), None])
 
     for i in a:
-      if not i[2]:
+      if i[2]:
+        dude = self.get_dude(i[2])
+        p = dude.prefix
+
+        if i[1] == '+v' and not p:
+          p = '+'
+        elif i[1] == '-v' and p == '+':
+          p = ''
+        elif i[1] == '+o':
+          p = '@'
+        elif i[1] == '-o':
+          p = ''
+        new_dude = dude.modify(prefix=p)
+        for j in self.chans.values():
+          if dude in j:
+            j.remove(dude)
+            j.add(new_dude)
+      else:
         chan = i[0]
         ch = i[1]
         if ch[0] == '+':
@@ -385,9 +401,6 @@ def tracking_on_mode(event, chan, nick, conn, db):
     return
   conn.registry.process_mode_change(conn, chan, event.irc_paramlist[1:])
 
-  who = yield from get_who(conn, chan)
-  conn.registry.process_who(conn, chan, who)
-
 
 @asyncio.coroutine
 @hook.command(permissions=['botcontrol'])
@@ -407,10 +420,13 @@ def z(conn, chan, event, bot, nick, reply, db, loop, text):
   x = yield from get_mode(conn, chan)
   return '{}'.format(x)
 
+
 @asyncio.coroutine
 @hook.command(permissions=['botcontrol'])
 def s(conn, chan, event, bot, nick, reply, db, loop, text):
-  conn.message('##abra', '{}  : {}'.format('##werewolf', conn.registry.chan('##werewolf')))
-  conn.message('##abra', '{}M : {}'.format('##werewolf', conn.registry.mode('##werewolf')))
-  conn.message('##abra', '{} : {}'.format('##werewolf-ded', conn.registry.chan('##werewolf-ded')))
-  conn.message('##abra', '{}M: {}'.format('##werewolf-ded', conn.registry.mode('##werewolf-ded')))
+  w = '##abra2'
+  m = '##abra'
+  conn.message('##abra', '{}  : {}'.format(w, conn.registry.chan(w)))
+  conn.message('##abra', '{}M : {}'.format(w, conn.registry.mode(w)))
+  conn.message('##abra', '{} : {}'.format(m, conn.registry.chan(m)))
+  conn.message('##abra', '{}M: {}'.format(m, conn.registry.mode(m)))
